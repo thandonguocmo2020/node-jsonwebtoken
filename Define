@@ -1,6 +1,96 @@
 JSON Web Token (JWT) là 1 tiêu chuẩn định nghĩa cách thức truyền tin an toàn bằng 1 đối tượng JSON. 
 
+https://scotch.io/tutorials/the-anatomy-of-a-json-web-token
+
 Phần chữ ký của JWT sẽ được mã hóa lại bằng HMAC hoặc RSA. 
+
+Nó là sự kết hợp của 3 phần :
+
+ <base64-encoded header>.<base64-encoded payload>.<base64-encoded signature> 
+ 
+ Nhìn trên trang chủ : 
+ 
+ https://jwt.io/ 
+ 
+ Ta thấy token được tạo ra từ  header + payload + signature ("tß´—™à%O˜v+nî…SZu¯µ€U…8H×" => mã băm đc tạo mởi thuật toán tạo chữ kí) 
+ 
+ HEADER:ALGORITHM & TOKEN TYPE ==> Header 1 đối tượng gồm 2 thuộc tính 
+ 
+ {
+  "alg": "HS256",  ==> chọn thuật toán mã hóa có thể là thuật toán HS256 hoặc  RS256
+  "typ": "JWT"    ==> mặc định là json web token 
+}
+
+
+PAYLOAD:  ==> Chứa các metadata siêu dữ liệu mà định nghĩa cho đoạn token đó. 
+
+Ví dụ như chủ sở hữu, người phát hành, ngày phát hành, ngày hết hạn....
+
+Thuộc về 3 loại metadata :  reserved, public và private claims
+
++ reserved => 
+
+các siêu dữ liệu metadata để định nghĩa cho chủ sở hữu token này
+
++ Trong đó reserved, public, private => là 3 loại đó.
+
+reserved => Gồm các một số metadata  là một tập hợp các yêu cầu được xác định trước đó là không bắt buộc nhưng khuyến cáo sử dụng.
+
+Nên sử dụng iss (issuer), exp (expiration time), sub (subject), aud (audience) 
+
+iss (issuer): Tổ chức phát hành. => string
+sub (subject): Tác giả - Quản lý cao cấp - có vấn đề gì gọi ?  ==> nó là một chuối có thể là string hoặc "number phone"
+aud (audience): đối tượng sử dụng token là những ai => "aud" giá trị là một mảng các chuỗi nhạy cảm " là chung chung ứng dụng sử dụng hoặc người dùng sử dụng.
+exp (expired time): thời điểm token sẽ hết hạn ==> Có thể sử dụng để tính toán thời điểm hết hạn của token.  Module hỗ trợ time chuyển đổi : https://github.com/zeit/ms xem module hỗ trợ chuyển đổi.
+nbf (not before time): token sẽ chưa hợp lệ nếu sử dụng trước thời điểm này
+iat (issued at): thời điểm token được phát hành, tính theo UNIX time
+jti: JWT ID
+
+{
+iss: "HoangHiep",
+sub: "01682994390",
+iat: 1300819370, 
+exp: 1300819380,
+nbf: 1300819375,
+}
+
+iat: 1300819370 => khởi tạo 
+exp: 1300819380 => kết thúc 10s sau
+nbf: 1300819375 ==> nếu xử dụng trước time ko có hiệu lực
+
+Sau đó Base64Url nó mã hóa để tạo thành phần thứ hai của JSON.
+
+Trên là metadata reserved xác định payload có thể được sử dụng ngoài ra bạn cũng có thể dùng thêm 
+
+public ==> là tùy chọn có thể được định nghĩa using JWTs
+
+JWTs là một đại diện được mã hóa của một đối tượng JSON. Các đối tượng JSON gồm không hoặc nhiều hơn các cặp tên / giá trị,
+trong đó tên là chuỗi và các giá trị là value json tùy ý. 
+
+Ví dụ :
+
+{
+ "sub": "tom@stormpath.com",
+  "name": "John Doe",
+  "admin": true,
+  "name1":" hello",
+  "description2":"name3",
+  "uri": {
+       "hostID":"1234",
+       "port":"8000"
+     }
+}
+
+
+Bạn có thể vào trang https://jwt.io/ lém cái đoạn trên vào paypal sau đó định nghĩa thử để xem nó mã hóa token.
+
+
+
+
+
+
+ 
+
 
 Ví dụ cho 1 JWT:
 
@@ -43,31 +133,8 @@ Client application                                            API
         |                      200 Success                     |
         |<-----------------------------------------------------|
         |                                                      |
-        
-        Xem thêm : https://techmaster.vn/posts/33959/khai-niem-ve-json-web-token
+   
   
-  
- Cấu tạo của json web token được cấu thành từ :
- 
- <base64-encoded header>.<base64-encoded payload>.<base64-encoded signature> 
- 
- 
- Giải thích : một tiêu đề, một tải trọng, và một chữ ký. 
- 
-  Xem thêm để hiểu  : https://auth0.com/blog/critical-vulnerabilities-in-json-web-token-libraries/
- 
- 3 đoạn mã hóa đều sử dụng base64  header + payload + signature.
- 
-
- 
- Header ==  { "alg": "HS256", "typ": "JWT" } 
- 
- Nhìn vào đối tượng này ta thấy 2 thuộc tính 
- 
- alg : ==> Xác định thuật toán mã hóa. Có thể là HMAC HS256 - RS256 
- 
- 
- 
  Tạo ra một token trong json web token : 
   
   jwt.sign(payload, secretOrPrivateKey, options, [callback])
