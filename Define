@@ -1,0 +1,108 @@
+JSON Web Token (JWT) là 1 tiêu chuẩn định nghĩa cách thức truyền tin an toàn bằng 1 đối tượng JSON. 
+
+Phần chữ ký của JWT sẽ được mã hóa lại bằng HMAC hoặc RSA. 
+
+Ví dụ cho 1 JWT:
+
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.
+eyJpc3MiOiJ0b3B0YWwuY29tIiwiZXhwIjoxNDI2NDIwODAwLCJodHRwOi8vdG9wdGFsLmNvbS9qd3RfY2xhaW1zL2lzX2FkbWluIjp0cnVlLCJjb21wYW55IjoiVG9wdGFsIiwiYXdlc29tZSI6dHJ1ZX0.
+yRQYnWzskCZUxPwaQupWkiUzKELZ49eM7oWxAQK_ZXw
+
+Kích thước nhỏ hơn ứng với công việc truyền tải sẽ nhanh hơn. 
+
+JWT có thể được truyền thông qua URL bằng giao thức http method get
+- Hoặc qua giao thức POST
+- Hay nhét vào bên trong phần HTTP Header. 
+
+Khi nào nên dùng JSON Web Token?
+
+1. Khi sử dụng trong việc xác thực có thời hạn. 
+
+2. Đặt Mã mà check thời gian sử dụng Form gửi lên hoặc số lần refesh gửi form.
+
+Client application                                            API
+    --------                                              -----------
+        |                                                      |
+        |                   GET /api/employees                 |
+        |----------------------------------------------------->|
+        |                     403 Forbidden                    |
+        |<-----------------------------------------------------|
+        |                                                      |
+        |                                                      |
+        |                 POST /api/authenticate               |  ==> gửi dữ liệu xác thực ==> gửi thành công tạo ra token lưu trữ
+        |     { login: "paduvi", password: "chotoxautinh" }    |  ==> JSON Web Token là 1 cách thức không tồi để truyền tin an toàn
+        |----------------------------------------------------->|
+        |                      200 Success                     |
+        |             { token: "my.personal.token" }           |
+        |<-----------------------------------------------------|
+        |                                                      |
+        |                                                      |
+        |                 GET /api/employees                   |
+        | Header { "Authorization: Bearer "my.personal.token" }|
+        |----------------------------------------------------->|
+        |                      200 Success                     |
+        |<-----------------------------------------------------|
+        |                                                      |
+        
+        Xem thêm : https://techmaster.vn/posts/33959/khai-niem-ve-json-web-token
+  
+  
+ Cấu tạo của json web token được cấu thành từ :
+ 
+ <base64-encoded header>.<base64-encoded payload>.<base64-encoded signature> 
+ 
+ 
+ Giải thích : một tiêu đề, một tải trọng, và một chữ ký. 
+ 
+  Xem thêm để hiểu  : https://auth0.com/blog/critical-vulnerabilities-in-json-web-token-libraries/
+ 
+ 3 đoạn mã hóa đều sử dụng base64  header + payload + signature.
+ 
+
+ 
+ Header ==  { "alg": "HS256", "typ": "JWT" } 
+ 
+ Nhìn vào đối tượng này ta thấy 2 thuộc tính 
+ 
+ alg : ==> Xác định thuật toán mã hóa. Có thể là HMAC HS256 - RS256 
+ 
+ 
+ 
+ Tạo ra một token trong json web token : 
+  
+  jwt.sign(payload, secretOrPrivateKey, options, [callback])
+        
+Các tham số cần quan tâm :
+        
+I. payload
+
+iss (issuer): tổ chức phát hành token tên của người hoặc tổ chức phát hành cái token này ""
+sub (subject): chủ đề của token ""
+aud (audience): đối tượng sử dụng token
+exp (expired time): thời điểm token sẽ hết hạn ==> tính bằng ms time : https://github.com/zeit/ms xem module hỗ trợ chuyển đổi.
+nbf (not before time): token sẽ chưa hợp lệ trước thời điểm này
+iat (issued at): thời điểm token được phát hành, tính theo UNIX time
+jti: JWT ID
+
+
+Ví dụ dùng payload :
+
+function createToken(req, user) {
+  var payload = {
+    iss: req.hostname,  // tổ chức phát hành
+    sub: user._id,  // người phát hành
+    iat: moment().unix(),  // thời điểm phát hành
+    exp: moment().add(14, 'days').unix() // thời điểm hết hạn.
+  };
+  return jwt.encode(payload, config.TOKEN_SECRET);
+}
+
+
+II. secret Or PrivateKey 
+
+secretOrPrivateKey là một chuỗi mà xác định qui tắc mã hóa token. 
+
+
+Trong bảo mật xác thực vô cùng quan trọng đây là một yếu tố cần quan tâm. 
+
+
